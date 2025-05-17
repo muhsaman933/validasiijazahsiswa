@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perbandingan Data KK dan Ijazah</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .comparison-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .student-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .student-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .student-nisn {
+            background-color: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .data-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3498db;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title:before {
+            content: "▶";
+            margin-right: 8px;
+            font-size: 0.8rem;
+            color: #3498db;
+        }
+        
+        .data-row {
+            display: flex;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .data-row:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .data-label {
+            width: 150px;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        
+        .data-value {
+            flex: 1;
+        }
+        
+        .mismatch {
+            background-color: #ffdddd;
+            position: relative;
+        }
+        
+        .mismatch:after {
+            content: "⚠ Tidak Sesuai";
+            position: absolute;
+            right: 10px;
+            color: #e74c3c;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .match {
+            background-color: #ddffdd;
+        }
+        
+        .filter-controls {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .highlight {
+            background-color: #fffacd;
+        }
+        
+        @media (max-width: 768px) {
+            .data-row {
+                flex-direction: column;
+            }
+            
+            .data-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Perbandingan Data Kartu Keluarga dan Ijazah</h1>
+    
+    <div class="filter-controls">
+        <div class="filter-group">
+            <label for="search-name">Cari Nama:</label>
+            <input type="text" id="search-name" placeholder="Masukkan nama siswa...">
+        </div>
+        <div class="filter-group">
+            <label for="search-nisn">Cari NISN:</label>
+            <input type="text" id="search-nisn" placeholder="Masukkan NISN...">
+        </div>
+        <div class="filter-group">
+            <label for="filter-mismatch">Filter Ketidaksesuaian:</label>
+            <select id="filter-mismatch">
+                <option value="all">Tampilkan Semua</option>
+                <option value="mismatch">Hanya yang Tidak Sesuai</option>
+                <option value="match">Hanya yang Sesuai</option>
+            </select>
+        </div>
+        <div class="filter-group" style="align-self: flex-end;">
+            <button id="reset-filters">Reset Filter</button>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="total-students">0</div>
+            <div class="stat-label">Total Siswa</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="mismatch-count">0</div>
+            <div class="stat-label">Ketidaksesuaian</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="match-count">0</div>
+            <div class="stat-label">Data Sesuai</div>
+        </div>
+    </div>
+    
+    <div class="comparison-container" id="student-container">
+        <!-- Data siswa akan dimasukkan di sini oleh JavaScript -->
+    </div>
+    
+    <script>
+        // Data dari Excel
+        const studentData = [
+            {
+                no: 1,
+                nisn: "0105042157",
+                nik: "1506025003100005",
+                namaKK: "AYUNDA PUTRI",
+                namaIjazah: "AYUNDA PUTRI",
+                tempatLahirKK: "KUALA TUNGKAL",
+                tempatLahirIjazah: "Tanjung Jabung Barat",
+                tanggalLahirKK: "10 Mar 2010",
+                tanggalLahirIjazah: "10 Maret 2010",
+                ibuKandung: "JUMISAH",
+                jkKK: "P",
+                jkIjazah: "P"
+            },
+            {
+                no: 2,
+                nisn: "0102455804",
+                nik: "1506024705100001",
+                namaKK: "MESI AULIA",
+                namaIjazah: "MESI AULIA",
+                tempatLahirKK: "TANJAB BARAT",
+                tempatLahirIjazah: "Kuala Tungkal",
+                tanggalLahirKK: "7 May 2010",
+                tanggalLahirIjazah: "7 Mei 2010",
+                ibuKandung: "sanainah",
+                jkKK: "P",
+                jkIjazah: "P"
+            },
+            {
+                no: 3,
+                nisn: "0096738478",
+                nik: "1506024505090003",
+                namaKK: "NUR AULIA",
+                namaIjazah: "NUR AULIA",
+                tempatLahirKK: "Tanjung Senjulang",
+                tempatLahirIjazah: "Tanjab Barat",
+                tanggalLahirKK: "05 May 2009",
+                tanggalLahirIjazah: "5 Mei 2009",
+                ibuKandung: "Halimah",
+                jkKK: "P",
+                jkIjazah: "P"
+            },
+            {
+                no: 4,
+                nisn: "0091410615",
+                nik: "1506025604090001",
+                namaKK: "VELENTINA",
+                namaIjazah: "VALENTINA",
+                tempatLahirKK: "Kuala Tungkal",
+                tempatLahirIjazah: "Kuala Tungkal",
+                tanggalLahirKK: "16 Apr 2009",
+                tanggalLahirIjazah: "16 Februari 2009",
+                ibuKandung: "DEWI",
+                jkKK: "P",
+                jkIjazah: "P"
+            },
+            {
+                no: 5,
+                nisn: "0106980599",
+                nik: "1506020202100002",
+                namaKK: "DIMAS ABDI DARMA",
+                namaIjazah: "DIMAS ABDI DARMA",
+                tempatLahirKK: "KUALA TUNGKAL",
+                tempatLahirIjazah: "Mendahara Tanjab Timur",
+                tanggalLahirKK: "02 Feb 2010",
+                tanggalLahirIjazah: "02 Februari 2010",
+                ibuKandung: "MALA",
+                jkKK: "L",
+                jkIjazah: "L"
+            },
+            {
+                no: 6,
+                nisn: "3106070092",
+                nik: "1506021008100003",
+                namaKK: "KHAIRUL NAZMI",
+                namaIjazah: "KHIRUL NAZMI",
+                tempatLahirKK: "PARIT ATONG",
+                tempatLahirIjazah: "Parit Atong",
+                tanggalLahirKK: "23 Jan 2010",
+                tanggalLahirIjazah: "23 Januari 2010",
+                ibuKandung: "UMMILAH",
+                jkKK: "L",
+                jkIjazah: "L"
+            },
+            {
+                no: 7,
+                nisn: "0103411759",
+                nik: "1506021603100001",
+                namaKK: "M. RAFI AMANSYAH",
+                namaIjazah: "M. RAFI AMANSYAH",
+                tempatLahirKK: "TANJUNG JABUNG BARAT",
+                tempatLahirIjazah: "Kuala Tungkal",
+                tanggalLahirKK: "16 Mar 2010",
+                tanggalLahirIjazah: "16 Maret 2010",
+                ibuKandung: "ERNI YUSNITA",
+                jkKK: "L",
+                jkIjazah: "L"
+            },
+            {
+                no: 8,
+                nisn: "0104776774",
+                nik: "1506132208100002",
+                namaKK: "Muhammad Majied Atqa",
+                namaIjazah: "MUHAMMAD MAJIED ATQA",
+                tempatLahirKK: "Tanjung Jabung Barat",
+                tempatLahirIjazah: "Tanjung Jabung Barat",
+                tanggalLahirKK: "22 Aug 2010",
+                tanggalLahirIjazah: "22 Juni 2010",
+                ibuKandung: "Mardiyanti",
+                jkKK: "L",
+                jkIjazah: "L"
+            }
+        ];
+
+        // Fungsi untuk memformat tanggal agar konsisten
+        function formatDate(dateStr) {
+            const months = {
+                'Jan': 'Januari', 'Feb': 'Februari', 'Mar': 'Maret', 'Apr': 'April',
+                'May': 'Mei', 'Jun': 'Juni', 'Jul': 'Juli', 'Aug': 'Agustus',
+                'Sep': 'September', 'Oct': 'Oktober', 'Nov': 'November', 'Dec': 'Desember'
+            };
+            
+            // Cek jika tanggal sudah dalam format Indonesia (mengandung nama bulan panjang)
+            if (dateStr.includes('uari') || dateStr.includes('ert') || dateStr.includes('aret') || 
+                dateStr.includes('il') || dateStr.includes('ei') || dateStr.includes('uni') || 
+                dateStr.includes('uli') || dateStr.includes('ustus') || dateStr.includes('ember')) {
+                return dateStr;
+            }
+            
+            // Format tanggal singkat (Inggris)
+            const parts = dateStr.split(' ');
+            if (parts.length === 3 && months[parts[1]]) {
+                return `${parts[0]} ${months[parts[1]]} ${parts[2]}`;
+            }
+            
+            return dateStr;
+        }
+
+        // Fungsi untuk membandingkan dua nilai
+        function compareValues(kkValue, ijazahValue, field) {
+            if (field === 'nama') {
+                return kkValue.toUpperCase() === ijazahValue.toUpperCase();
+            }
+            
+            if (field === 'tempatLahir') {
+                const kk = kkValue.toUpperCase().replace(/[^A-Z]/g, '');
+                const ijazah = ijazahValue.toUpperCase().replace(/[^A-Z]/g, '');
+                return kk === ijazah || 
+                       kk.includes(ijazah) || 
+                       ijazah.includes(kk) || 
+                       kk.replace('TANJAB', 'TANJUNG JABUNG') === ijazah.replace('TANJAB', 'TANJUNG JABUNG');
+            }
+            
+            if (field === 'tanggalLahir') {
+                return formatDate(kkValue) === formatDate(ijazahValue);
+            }
+            
+            return kkValue === ijazahValue;
+        }
+
+        // Fungsi untuk menampilkan data siswa
+        function displayStudents(students) {
+            const container = document.getElementById('student-container');
+            container.innerHTML = '';
+            
+            let mismatchCount = 0;
+            let matchCount = 0;
+            
+            students.forEach(student => {
+                // Hitung ketidaksesuaian
+                const namaMatch = compareValues(student.namaKK, student.namaIjazah, 'nama');
+                const tempatLahirMatch = compareValues(student.tempatLahirKK, student.tempatLahirIjazah, 'tempatLahir');
+                const tanggalLahirMatch = compareValues(student.tanggalLahirKK, student.tanggalLahirIjazah, 'tanggalLahir');
+                const jkMatch = compareValues(student.jkKK, student.jkIjazah, 'jk');
+                
+                const hasMismatch = !namaMatch || !tempatLahirMatch || !tanggalLahirMatch || !jkMatch;
+                
+                if (hasMismatch) {
+                    mismatchCount++;
+                } else {
+                    matchCount++;
+                }
+                
+                // Buat elemen kartu siswa
+                const card = document.createElement('div');
+                card.className = `student-card ${hasMismatch ? 'highlight' : ''}`;
+                
+                // Header kartu
+                const header = document.createElement('div');
+                header.className = 'student-header';
+                
+                const nameEl = document.createElement('div');
+                nameEl.className = 'student-name';
+                nameEl.textContent = student.namaKK;
+                
+                const nisnEl = document.createElement('div');
+                nisnEl.className = 'student-nisn';
+                nisnEl.textContent = `NISN: ${student.nisn}`;
+                
+                header.appendChild(nameEl);
+                header.appendChild(nisnEl);
+                
+                // Bagian data KK
+                const kkSection = document.createElement('div');
+                kkSection.className = 'data-section';
+                
+                const kkTitle = document.createElement('div');
+                kkTitle.className = 'section-title';
+                kkTitle.textContent = 'Data Kartu Keluarga';
+                
+                kkSection.appendChild(kkTitle);
+                
+                // Tambahkan baris data KK
+                addDataRow(kkSection, 'NIK', student.nik, '', true);
+                addDataRow(kkSection, 'Nama', student.namaKK, namaMatch ? 'match' : 'mismatch');
+                addDataRow(kkSection, 'Tempat Lahir', student.tempatLahirKK, tempatLahirMatch ? 'match' : 'mismatch');
+                addDataRow(kkSection, 'Tanggal Lahir', formatDate(student.tanggalLahirKK), tanggalLahirMatch ? 'match' : 'mismatch');
+                addDataRow(kkSection, 'Jenis Kelamin', student.jkKK === 'L' ? 'Laki-laki' : 'Perempuan', jkMatch ? 'match' : 'mismatch');
+                addDataRow(kkSection, 'Ibu Kandung', student.ibuKandung, '', true);
+                
+                // Bagian data Ijazah
+                const ijazahSection = document.createElement('div');
+                ijazahSection.className = 'data-section';
+                
+                const ijazahTitle = document.createElement('div');
+                ijazahTitle.className = 'section-title';
+                ijazahTitle.textContent = 'Data Ijazah';
+                
+                ijazahSection.appendChild(ijazahTitle);
+                
+                // Tambahkan baris data Ijazah
+                addDataRow(ijazahSection, 'NISN', student.nisn, '', true);
+                addDataRow(ijazahSection, 'Nama', student.namaIjazah, namaMatch ? 'match' : 'mismatch');
+                addDataRow(ijazahSection, 'Tempat Lahir', student.tempatLahirIjazah, tempatLahirMatch ? 'match' : 'mismatch');
+                addDataRow(ijazahSection, 'Tanggal Lahir', formatDate(student.tanggalLahirIjazah), tanggalLahirMatch ? 'match' : 'mismatch');
+                addDataRow(ijazahSection, 'Jenis Kelamin', student.jkIjazah === 'L' ? 'Laki-laki' : 'Perempuan', jkMatch ? 'match' : 'mismatch');
+                
+                // Gabungkan semua elemen
+                card.appendChild(header);
+                card.appendChild(kkSection);
+                card.appendChild(ijazahSection);
+                
+                container.appendChild(card);
+            });
+            
+            // Update statistik
+            document.getElementById('total-students').textContent = students.length;
+            document.getElementById('mismatch-count').textContent = mismatchCount;
+            document.getElementById('match-count').textContent = matchCount;
+        }
+
+        // Fungsi pembantu untuk menambahkan baris data
+        function addDataRow(container, label, value, status, noCompare = false) {
+            const row = document.createElement('div');
+            row.className = `data-row ${status}`;
+            
+            const labelEl = document.createElement('div');
+            labelEl.className = 'data-label';
+            labelEl.textContent = label;
+            
+            const valueEl = document.createElement('div');
+            valueEl.className = 'data-value';
+            valueEl.textContent = value;
+            
+            row.appendChild(labelEl);
+            row.appendChild(valueEl);
+            
+            if (!noCompare && status === 'mismatch') {
+                const mismatchIcon = document.createElement('div');
+                mismatchIcon.className = 'mismatch-icon';
+                row.appendChild(mismatchIcon);
+            }
+            
+            container.appendChild(row);
+        }
+
+        // Fungsi untuk memfilter data
+        function filterStudents() {
+            const nameFilter = document.getElementById('search-name').value.toLowerCase();
+            const nisnFilter = document.getElementById('search-nisn').value.toLowerCase();
+            const mismatchFilter = document.getElementById('filter-mismatch').value;
+            
+            const filtered = studentData.filter(student => {
+                // Filter nama dan NISN
+                const nameMatch = student.namaKK.toLowerCase().includes(nameFilter) || 
+                                 student.namaIjazah.toLowerCase().includes(nameFilter);
+                const nisnMatch = student.nisn.toLowerCase().includes(nisnFilter);
+                
+                if (!nameMatch || !nisnMatch) return false;
+                
+                // Filter ketidaksesuaian
+                if (mismatchFilter === 'all') return true;
+                
+                const namaMatch = compareValues(student.namaKK, student.namaIjazah, 'nama');
+                const tempatLahirMatch = compareValues(student.tempatLahirKK, student.tempatLahirIjazah, 'tempatLahir');
+                const tanggalLahirMatch = compareValues(student.tanggalLahirKK, student.tanggalLahirIjazah, 'tanggalLahir');
+                const jkMatch = compareValues(student.jkKK, student.jkIjazah, 'jk');
+                
+                const hasMismatch = !namaMatch || !tempatLahirMatch || !tanggalLahirMatch || !jkMatch;
+                
+                if (mismatchFilter === 'mismatch') return hasMismatch;
+                if (mismatchFilter === 'match') return !hasMismatch;
+                
+                return true;
+            });
+            
+            displayStudents(filtered);
+        }
+
+        // Inisialisasi event listeners
+        document.getElementById('search-name').addEventListener('input', filterStudents);
+        document.getElementById('search-nisn').addEventListener('input', filterStudents);
+        document.getElementById('filter-mismatch').addEventListener('change', filterStudents);
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            document.getElementById('search-name').value = '';
+            document.getElementById('search-nisn').value = '';
+            document.getElementById('filter-mismatch').value = 'all';
+            filterStudents();
+        });
+
+        // Tampilkan semua data saat pertama kali dimuat
+        displayStudents(studentData);
+    </script>
+</body>
+</html>
